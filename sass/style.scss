@@ -1,34 +1,19 @@
+@import "compass";
+
 * {
-    -webkit-box-sizing:border-box;
-    -moz-box-sizing:border-box;
-    box-sizing:border-box;
+    @include box-sizing("border-box");
+}
+
+html {
+    -webkit-font-smoothing: antialiased;
 }
 
 body {
-    color: #444;
     background-color: #000;
-    font-family: Helvetica, Arial, sans-serif;
-    font-size: 14px;
-    padding: 30px;
-    margin: 0px;
-}
-
-p {
-    margin: 0px 0px 15px 0px;
-}
-
-ul {
-    margin: 0px;
-    padding: 0px 0px 0px 15px;
 }
 
 a {
     cursor: pointer;
-    color: #174b71;
-    text-decoration: underline;
-}
-a:hover {
-    text-decoration: none;
 }
 
 .application {
@@ -40,41 +25,55 @@ a:hover {
 }
 
 .menu {
-    z-index: 2;
+    z-index: 3;
     position: absolute;
     top: 0px;
     bottom: 0px;
     left: 0px;
     width: 200px;
+    color: #fff;
+    @include background(linear-gradient(#222, #111));
+    //@include box-shadow(0px 0px 10px rgba(0, 0, 0, 0.4));
     border-right: 1px solid #fff;
-    background-color: #003458;
-    color: #fff;
-}
-.menu .title {
-    padding: 10px 20px;
-    line-height: 32px;
-    font-weight: bold;
-    text-align: center;
-}
-.menu ul {
-    padding: 0px;
-    margin: 0px;
-}
-.menu li {
-    list-style: none;
-}
-.menu a {
-    display: block;
-    padding: 10px 20px;
-    color: #fff;
-    text-decoration: none;
-}
-.menu a:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+
+    .title {
+        padding: 10px 20px;
+        line-height: 32px;
+        font-weight: bold;
+        text-align: center;
+    }
+    
+    ul {
+        padding: 0px;
+        margin: 0px;
+        border-top: 1px solid rgba(0, 0, 0, 0.2);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        
+        li {
+            list-style: none;
+            
+            a {
+                display: block;
+                padding: 10px 20px;
+                color: #fff;
+                font-size: 16px;
+                line-height: 26px;
+                text-decoration: none;
+                @include text-shadow(0px 1px 1px rgba(0, 0, 0, 0.5));
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+                border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+                
+                &:hover {
+                    background-color: rgba(255, 255, 255, 0.1);
+                }
+            }
+        }
+    }
 }
 
-h1 {
+.panel-header {
     position: absolute;
+    z-index: 2;
     top: 0px;
     right: 0px;
     left: 0px;
@@ -83,28 +82,29 @@ h1 {
     line-height: 32px;
     margin: 0px;
     padding: 10px 20px;
-    background: #174b71;
+    @include background(linear-gradient(#444, #222));
+    @include text-shadow(0px 1px 1px rgba(0, 0, 0, 0.5));
     color: #fff;
-    border-bottom: 1px solid #000;
     font-weight: normal;
     text-align: center;
-    overflow: hidden;
-}
-h1 .back {
-    position: absolute;
-    top: 16px;
-    left: 20px;
-    margin: 0;
-    border-top: 10px solid transparent;
-    border-left: 0;
-    border-right: 20px solid #fff;
-    border-bottom: 10px solid transparent;
-    padding: 0;
-    width: 0;
-    height: 0;
-}
-h1 .back:hover {
-    border-right-color: rgba(255, 255, 255, .85);
+    
+    .back {
+        position: absolute;
+        top: 16px;
+        left: 20px;
+        margin: 0;
+        border-top: 10px solid transparent;
+        border-left: 0;
+        border-right: 20px solid #fff;
+        border-bottom: 10px solid transparent;
+        padding: 0;
+        width: 0;
+        height: 0;
+        
+        &:hover {
+            border-right-color: rgba(255, 255, 255, .85);
+        }
+    }
 }
 
 .content {

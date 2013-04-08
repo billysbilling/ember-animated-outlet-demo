@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <link rel="stylesheet" type="text/css" href="/css/style.css"/>
+    <link rel="stylesheet" type="text/css" href="/bootstrap/css/bootstrap.min.css"/>
     <link rel="stylesheet" type="text/css" href="/js/vendor/ember-animated-outlet.css"/>
-    
+    <link rel="stylesheet" type="text/css" href="/css/style.css"/>
+
     <script src="/js/vendor/jquery-1.9.0.js"></script>
     <script src="/js/vendor/handlebars-1.0.rc.3.js"></script>
     <script src="/js/vendor/ember.js"></script>
@@ -19,7 +20,7 @@
 
 <script data-template-name="application" type="text/x-handlebars">
     <div class="menu">
-        <div class="title">Menu</div>
+        <div class="title">Ember Animated Outlet</div>
         <ul>
             <li><a {{action goToIndex}}>Introduction</a></li>
             <li><a {{action goToInvoices}}>Invoices</a></li>
@@ -32,7 +33,7 @@
 </script>
 
 <script data-template-name="index" type="text/x-handlebars">
-    <h1>Ember.js Animated Outlet Demo</h1>
+    <div class="panel-header">Ember.js Animated Outlet Demo</div>
     <div class="panel">
         <p>This is a demo of Ember Animated Demo. See the source code on <a href="https://github.com/billysbilling/ember-animated-outlet">GitHub</a>.</p>
         <p>Clicking any item in the left menu will result in a fade animation.</p>
@@ -43,18 +44,31 @@
 </script>
 
 <script data-template-name="invoices/index" type="text/x-handlebars">
-    <h1>Invoices</h1>
+    <div class="panel-header">Invoices</div>
     <div class="panel">
-        <ul>
-            {{#each invoice in controller}}
-                <li><a {{action showInvoice invoice}}>Invoice #{{invoice.no}} to {{invoice.contact.name}}</a></li>
-            {{/each}}
-        </ul>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Invoice#</th>
+                    <th>Contact</th>
+                    <th style="text-align:right;">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each invoice in controller}}
+                    <tr>
+                        <td><a {{action showInvoice invoice}}>Invoice #{{invoice.no}}</a></td>
+                        <td><a {{action showContact invoice.contact}}>{{invoice.contact.name}}</a></td>
+                        <td style="text-align:right;">${{invoice.amount}}</td>
+                    </tr>
+                {{/each}}
+            </tbody>
+        </table>
     </div>
 </script>
 
 <script data-template-name="invoices/show" type="text/x-handlebars">
-    <h1><a class="back" {{action goBack}}></a>Invoice #{{no}}</h1>
+    <div class="panel-header"><a class="back" {{action goBack}}></a>Invoice #{{no}}</div>
     <div class="panel">
         <p>Contact: <a {{action showContact contact}}>{{contact.name}}</a></p>
         <p>Total amount: ${{amount}}</p>
@@ -62,40 +76,66 @@
 </script>
 
 <script data-template-name="contacts/index" type="text/x-handlebars">
-    <h1>Contacts</h1>
+    <div class="panel-header">Contacts</div>
     <div class="panel">
-        <ul>
-            {{#each contact in controller}}
-                <li><a {{action showContact contact}}>{{contact.name}}</a></li>
-            {{/each}}
-        </ul>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>State</th>
+                    <th>Country</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each contact in controller}}
+                    <tr>
+                        <td><a {{action showContact contact}}>{{contact.name}}</a></td>
+                        <td>{{contact.state}}</td>
+                        <td>{{contact.country}}</td>
+                    </tr>
+                {{/each}}
+            </tbody>
+        </table>
     </div>
 </script>
 
 <script data-template-name="contact" type="text/x-handlebars">
-    <h1><a class="back" {{action goBack}}></a>{{name}}</h1>
+    <div class="panel-header"><a class="back" {{action goBack}}></a>{{name}}</div>
     <div class="panel-outer">
         {{animatedOutlet name="contact"}}
     </div>
 </script>
 
 <script data-template-name="contact/info" type="text/x-handlebars">
-    <p><a {{action showContactInvoices}}>Flip to invoices</a></p>
-    <h2>Contact info</h2>
-    <p>
-        <b>{{name}}</b><br>
-        {{formattedAddress}}
-    </p>
+    <button class="btn" {{action showContactInvoices}}>Flip to invoices</button>
+    <h3>Contact info</h3>
+    <address>
+        <strong>{{name}}</strong><br>
+        {{street}}<br>
+        {{city}}, {{state}} {{zipcode}}<br>
+        {{country}}
+    </address>
 </script>
 
 <script data-template-name="contact/invoices" type="text/x-handlebars">
-    <p><a {{action showContactInfo}}>Flip to contact info</a></p>
-    <h2>Invoices</h2>
-    <ul>
-        {{#each invoice in invoices}}
-            <li><a {{action showInvoice invoice}}>Invoice #{{invoice.no}} to {{invoice.contact.name}}</a></li>
-        {{/each}}
-    </ul>
+    <button class="btn" {{action showContactInfo}}>Flip to contact info</button>
+    <h3>Invoices for {{name}}</h3>
+    <table class="table table-bordered">
+        <thead>
+        <tr>
+            <th>Invoice#</th>
+            <th style="text-align:right;">Amount</th>
+        </tr>
+        </thead>
+        <tbody>
+            {{#each invoice in invoices}}
+                <tr>
+                    <td><a {{action showInvoice invoice}}>Invoice #{{invoice.no}}</a></td>
+                    <td style="text-align:right;">${{invoice.amount}}</td>
+                </tr>
+            {{/each}}
+        </tbody>
+    </table>
 </script>
 
 </body>

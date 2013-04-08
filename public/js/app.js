@@ -76,11 +76,6 @@ App.ContactInfoRoute = Ember.Route.extend({
         return this.modelFor('contact');
     }
 });
-App.ContactInfoController = Ember.ObjectController.extend({
-    formattedAddress: function() {
-        return new Ember.Handlebars.SafeString(Ember.Handlebars.Utils.escapeExpression(this.get('address')).replace(/\n/g, '<br>'));
-    }.property('address')
-});
 App.ContactInfoView = Ember.View.extend({
     classNames: ['panel-inner']
 });
@@ -107,7 +102,11 @@ App.Invoice = DS.Model.extend({
 
 App.Contact = DS.Model.extend({
     name: DS.attr('string'),
-    address: DS.attr('string'),
+    street: DS.attr('string'),
+    zipcode: DS.attr('string'),
+    city: DS.attr('string'),
+    state: DS.attr('string'),
+    country: DS.attr('string'),
     invoices: DS.hasMany('App.Invoice')
 });
 
@@ -136,13 +135,21 @@ App.Contact.FIXTURES = [
     {
         id: 201,
         name: 'Chocolate Fever',
-        address: '680 Choco Avenue\n94105 San Francisco, CA\nUnited States',
+        street: '680 Choco Avenue',
+        zipcode: '94105',
+        city: 'San Francisco',
+        state: 'CA',
+        country: 'United States',
         invoices: [101, 103]
     },
     {
         id: 202,
         name: 'Ice Cream and Fun',
-        address: '750 Icey Road\n94105 San Francisco, CA\nUnited States',
+        street: '750 Icey Road',
+        zipcode: '94105',
+        city: 'San Francisco',
+        state: 'CA',
+        country: 'United States',
         invoices: [102]
     }
 ];

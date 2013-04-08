@@ -227,73 +227,65 @@ Ember.ControllerMixin.reopen({
     }
 
 });
-Ember.AnimatedContainerView.registerEffect('fade', function(outlet, newView, oldView) {
-    var outletEl = outlet.$(),
-        newEl = newView.$(),
+Ember.AnimatedContainerView.registerEffect('fade', function(ct, newView, oldView) {
+    var newEl = newView.$(),
         oldEl = oldView.$();
-    newEl.css({zIndex: 1});
-    oldEl.css({zIndex: 2});
-    oldEl.stop().animate({
-        opacity: 0
-    }, function() {
-        outletEl.removeClass('ember-animated-container-fade-outlet');
-        newEl.removeClass('ember-animated-container-fade-view-new');
-        outlet.removeObject(oldView);
-        oldView.destroy();
-    });
-});
-Ember.AnimatedContainerView.registerEffect('flip', function(outlet, newView, oldView) {
-    var outletEl = outlet.$(),
-        newEl = newView.$(),
-        oldEl = oldView.$();
-    outletEl.wrap('<div class="ember-animated-container-flip-wrap"></div>')
-    outletEl.addClass('ember-animated-container-flip-outlet');
-    newEl.addClass('ember-animated-container-flip-back');
-    oldEl.addClass('ember-animated-container-flip-front');
+    newEl.addClass('ember-animated-container-fade-new');
+    oldEl.addClass('ember-animated-container-fade-old');
     setTimeout(function() {
-        outletEl.addClass('ember-animated-container-flip-outlet-flipped');
-        outletEl.one('transitionend MSTransitionEnd webkitTransitionEnd oTransitionEnd', function() {
-            outletEl.unwrap();
-            outletEl.removeClass('ember-animated-container-flip-outlet-flipped');
-            outletEl.removeClass('ember-animated-container-flip-outlet');
-            newEl.removeClass('ember-animated-container-flip-back');
-            outlet.removeObject(oldView);
+        oldEl.addClass('ember-animated-container-fade-old-fading');
+        setTimeout(function() {
+            newEl.removeClass('ember-animated-container-fade-new');
+            ct.removeObject(oldView);
             oldView.destroy();
-        });
+        }, 550);
+    }, 0);
+});
+Ember.AnimatedContainerView.registerEffect('flip', function(ct, newView, oldView) {
+    var ctEl = ct.$(),
+        newEl = newView.$(),
+        oldEl = oldView.$();
+    ctEl.wrap('<div class="ember-animated-container-flip-wrap"></div>')
+    ctEl.addClass('ember-animated-container-flip-ct');
+    newEl.addClass('ember-animated-container-flip-new');
+    oldEl.addClass('ember-animated-container-flip-old');
+    setTimeout(function() {
+        ctEl.addClass('ember-animated-container-flip-ct-flipping');
+        setTimeout(function() {
+            ctEl.unwrap();
+            ctEl.removeClass('ember-animated-container-flip-ct');
+            ctEl.removeClass('ember-animated-container-flip-ct-flipping');
+            newEl.removeClass('ember-animated-container-flip-new');
+            ct.removeObject(oldView);
+            oldView.destroy();
+        }, 650);
     }, 0);
 });
 (function() {
     
-var slide = function(outlet, newView, oldView, direction) {
-    var outletEl = outlet.$(),
-        outletWidth = outletEl.outerWidth(),
-        outletOriginalLeft = outletEl.css('left'),
-        newEl = newView.$(),
-        newElOriginalLeft = newEl.css('left'),
-        animateLeft;
-    if (direction == 'left') {
-        newEl.css('left', outletWidth+'px');
-        animateLeft = -outletWidth;
-    } else {
-        newEl.css('left', (-outletWidth)+'px');
-        animateLeft = outletWidth;
-    }
-    outletEl.stop().animate({
-        left: animateLeft
-    }, function() {
-        outletEl.css('left', outletOriginalLeft);
-        newEl.css('left', newElOriginalLeft);
-        outlet.removeObject(oldView);
-        oldView.destroy();
-    });
+var slide = function(ct, newView, oldView, direction) {
+    var ctEl = ct.$(),
+        newEl = newView.$();
+    ctEl.addClass('ember-animated-container-slide-'+direction+'-ct');
+    newEl.addClass('ember-animated-container-slide-'+direction+'-new');
+    setTimeout(function() {
+        ctEl.addClass('ember-animated-container-slide-'+direction+'-ct-sliding');
+        setTimeout(function() {
+            ctEl.removeClass('ember-animated-container-slide-'+direction+'-ct');
+            ctEl.removeClass('ember-animated-container-slide-'+direction+'-ct-sliding');
+            newEl.removeClass('ember-animated-container-slide-'+direction+'-new');
+            ct.removeObject(oldView);
+            oldView.destroy();
+        }, 450);
+    }, 0);
 };
     
-Ember.AnimatedContainerView.registerEffect('slideLeft', function(outlet, newView, oldView) {
-    slide(outlet, newView, oldView, 'left');
+Ember.AnimatedContainerView.registerEffect('slideLeft', function(ct, newView, oldView) {
+    slide(ct, newView, oldView, 'left');
 });
 
-Ember.AnimatedContainerView.registerEffect('slideRight', function(outlet, newView, oldView) {
-    slide(outlet, newView, oldView, 'right');
+Ember.AnimatedContainerView.registerEffect('slideRight', function(ct, newView, oldView) {
+    slide(ct, newView, oldView, 'right');
 });
 
 })();

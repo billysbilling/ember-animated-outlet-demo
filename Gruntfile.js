@@ -12,10 +12,17 @@ module.exports = function(grunt) {
                     environment: 'production'
                 }
             }
+        },
+        watch: {
+            files: [
+                'sass/**/*'
+            ],
+            tasks: ['default']
         }
     });
 
     grunt.loadNpmTasks('grunt-contrib-compass');
+    grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.registerTask('default', ['compass']);
 
 };
