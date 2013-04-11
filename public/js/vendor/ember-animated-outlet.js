@@ -13,6 +13,7 @@ Ember.AnimatedContainerView = Ember.ContainerView.extend({
         this._super();
         //Register this view, so queued effects can be related with this view by name
         Ember.AnimatedContainerView._views[this.get('name')] = this;
+        this._isAnimating = false;
     },
     
     willDestroy: function() {
@@ -33,38 +34,74 @@ Ember.AnimatedContainerView = Ember.ContainerView.extend({
     }, 'currentView'),
 
     _currentViewDidChange: Ember.observer(function() {
-        var self = this,
-            newView = Ember.get(this, 'currentView'),
+        var newView = Ember.get(this, 'currentView'),
             oldView = Ember.get(this, 'oldView'),
-            name = this.get('name');
+            name = this.get('name'),
+            effect = null;
         if (newView) {
-            this.pushObject(newView);
-            //Only animate if there is both a new view and an old view
             if (oldView) {
                 Ember.assert('Ember.AnimatedContainerView can only animate non-virtual views. You need to explicitly define your view class.', !oldView.isVirtual);
                 Ember.assert('Ember.AnimatedContainerView can only animate non-virtual views. You need to explicitly define your view class.', !newView.isVirtual);
                 //Get and validate a potentially queued effect
-                var effect = Ember.AnimatedContainerView._animationQueue[name];
+                effect = Ember.AnimatedContainerView._animationQueue[name];
+                delete Ember.AnimatedContainerView._animationQueue[name];
                 if (effect && !Ember.AnimatedContainerView._effects[effect]) {
                     Ember.warn('Unknown animation effect: '+effect);
                     effect = null;
                 }
-                if (effect) {
-                    //If an effect is queued, then start the effect when the new view has been inserted
-                    delete Ember.AnimatedContainerView._animationQueue[name];
-                    newView.on('didInsertElement', function() {
-                        Ember.AnimatedContainerView._effects[effect](self, newView, oldView);
+                //Forget about the old view
+                this.set('oldView', null);
+            }
+            //If there is already an animation queued, we should cancel it
+            if (this._queuedAnimation) {
+                oldView.destroy(); //the oldView has never been visible, and never will be, so we can just destroy it now
+                oldView = this._queuedAnimation.oldView; //instead, use the oldView from the queued animation, which is our real currentView
+            }
+            //Queue this animation and check the queue
+            this._queuedAnimation = {
+                newView: newView,
+                oldView: oldView,
+                effect: effect
+            };
+            this._handleAnimationQueue();
+        }
+    }, 'currentView'),
+
+    _handleAnimationQueue: function() {
+        //If animation is in progress, just stop here. Once the animation has finished, this method will be called again.
+        if (this._isAnimating) {
+            return;
+        }
+        var self = this,
+            q = this._queuedAnimation;
+        if (q) {
+            var newView = q.newView,
+                oldView = q.oldView,
+                effect = q.effect;
+            this._queuedAnimation = null;
+            //Push the newView to this view, which will append it to the DOM
+            this.pushObject(newView);
+            if (oldView && effect) {
+                //If an effect is queued, then start the effect when the new view has been inserted in the DOM
+                this._isAnimating = true;
+                newView.on('didInsertElement', function() {
+                    Ember.AnimatedContainerView._effects[effect](self, newView, oldView, function() {
+                        self.removeObject(oldView);
+                        oldView.destroy();
+                        //Check to see if there are any queued animations
+                        self._isAnimating = false;
+                        self._handleAnimationQueue();
                     });
-                } else {
+                });
+            } else {
+                if (oldView) {
                     //If there is no effect queued, then just remove the old view (as would normally happen in a ContainerView)
                     this.removeObject(oldView);
                     oldView.destroy();
                 }
-                //Forget about the old view
-                this.set('oldView', null);
             }
         }
-    }, 'currentView'),
+    },
 
     enqueueAnimation: function(effect) {
         Ember.AnimatedContainerView._animationQueue[this.get('name')] = effect;
@@ -227,7 +264,7 @@ Ember.ControllerMixin.reopen({
     }
 
 });
-Ember.AnimatedContainerView.registerEffect('fade', function(ct, newView, oldView) {
+Ember.AnimatedContainerView.registerEffect('fade', function(ct, newView, oldView, callback) {
     var newEl = newView.$(),
         oldEl = oldView.$();
     newEl.addClass('ember-animated-container-fade-new');
@@ -236,12 +273,11 @@ Ember.AnimatedContainerView.registerEffect('fade', function(ct, newView, oldView
         oldEl.addClass('ember-animated-container-fade-old-fading');
         setTimeout(function() {
             newEl.removeClass('ember-animated-container-fade-new');
-            ct.removeObject(oldView);
-            oldView.destroy();
+            callback();
         }, 550);
     }, 0);
 });
-Ember.AnimatedContainerView.registerEffect('flip', function(ct, newView, oldView) {
+Ember.AnimatedContainerView.registerEffect('flip', function(ct, newView, oldView, callback) {
     var ctEl = ct.$(),
         newEl = newView.$(),
         oldEl = oldView.$();
@@ -256,36 +292,49 @@ Ember.AnimatedContainerView.registerEffect('flip', function(ct, newView, oldView
             ctEl.removeClass('ember-animated-container-flip-ct');
             ctEl.removeClass('ember-animated-container-flip-ct-flipping');
             newEl.removeClass('ember-animated-container-flip-new');
-            ct.removeObject(oldView);
-            oldView.destroy();
+            callback();
         }, 650);
     }, 0);
 });
 (function() {
     
-var slide = function(ct, newView, oldView, direction) {
+var slide = function(ct, newView, oldView, callback, direction, slow) {
     var ctEl = ct.$(),
-        newEl = newView.$();
-    ctEl.addClass('ember-animated-container-slide-'+direction+'-ct');
+        newEl = newView.$(),
+        duration = slow ? 2050 : 450;
+    ctEl.addClass('ember-animated-container-slide-'+direction+'-ct')
+    if (slow) {
+        ctEl.addClass('ember-animated-container-slide-slow-ct')
+    }
     newEl.addClass('ember-animated-container-slide-'+direction+'-new');
     setTimeout(function() {
         ctEl.addClass('ember-animated-container-slide-'+direction+'-ct-sliding');
         setTimeout(function() {
             ctEl.removeClass('ember-animated-container-slide-'+direction+'-ct');
+            if (slow) {
+                ctEl.removeClass('ember-animated-container-slide-slow-ct')
+            }
             ctEl.removeClass('ember-animated-container-slide-'+direction+'-ct-sliding');
             newEl.removeClass('ember-animated-container-slide-'+direction+'-new');
-            ct.removeObject(oldView);
-            oldView.destroy();
-        }, 450);
+            callback();
+        }, duration);
     }, 0);
 };
-    
-Ember.AnimatedContainerView.registerEffect('slideLeft', function(ct, newView, oldView) {
-    slide(ct, newView, oldView, 'left');
+
+Ember.AnimatedContainerView.registerEffect('slideLeft', function(ct, newView, oldView, callback) {
+    slide(ct, newView, oldView, callback, 'left', false);
 });
 
-Ember.AnimatedContainerView.registerEffect('slideRight', function(ct, newView, oldView) {
-    slide(ct, newView, oldView, 'right');
+Ember.AnimatedContainerView.registerEffect('slideRight', function(ct, newView, oldView, callback) {
+    slide(ct, newView, oldView, callback, 'right', false);
+});
+
+Ember.AnimatedContainerView.registerEffect('slowSlideLeft', function(ct, newView, oldView, callback) {
+    slide(ct, newView, oldView, callback, 'left', true);
+});
+    
+Ember.AnimatedContainerView.registerEffect('slowSlideRight', function(ct, newView, oldView, callback) {
+    slide(ct, newView, oldView, callback, 'right', true);
 });
 
 })();
