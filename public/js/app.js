@@ -14,6 +14,9 @@ App.Router.map(function() {
             this.route('invoices');
         });
     });
+    this.route('slow1');
+    this.route('slow2');
+    this.route('slow3');
 });
 
 
@@ -42,6 +45,15 @@ App.ApplicationRoute = Ember.Route.extend({
         },
         showContactInvoices: function() {
             this.replaceWithAnimated('contact.invoices', {contact: 'flip'});
+        },
+        goToSlow1: function() {
+            this.transitionToAnimated('slow1', {main: 'slowSlideLeft'});
+        },
+        goToSlow2: function() {
+            this.transitionToAnimated('slow2', {main: 'slowSlideLeft'});
+        },
+        goToSlow3: function() {
+            this.transitionToAnimated('slow3', {main: 'slowSlideLeft'});
         },
         goBack: function() {
             Ember.AnimatedContainerView.enqueueAnimations({main: 'slideRight'});
@@ -87,6 +99,11 @@ App.ContactInvoicesRoute = Ember.Route.extend({
 App.ContactInvoicesView = Ember.View.extend({
     classNames: ['panel-inner']
 });
+
+
+App.Slow1View = Ember.View.extend();
+App.Slow2View = Ember.View.extend();
+App.Slow3View = Ember.View.extend();
 
 
 App.Store = DS.Store.extend({

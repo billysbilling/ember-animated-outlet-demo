@@ -26,6 +26,12 @@
             <li><a {{action goToInvoices}}>Invoices</a></li>
             <li><a {{action goToContacts}}>Contacts</a></li>
         </ul>
+        <div class="text">Go crazy with slow animation:</div>
+        <ul>
+            <li><a {{action goToSlow1}}>Slow 1</a></li>
+            <li><a {{action goToSlow2}}>Slow 2</a></li>
+            <li><a {{action goToSlow3}}>Slow 3</a></li>
+        </ul>
     </div>
     <div class="content">
         {{animatedOutlet name="main"}}
@@ -136,6 +142,52 @@
             {{/each}}
         </tbody>
     </table>
+</script>
+
+<script data-template-name="slow1" type="text/x-handlebars">
+    <div class="panel-header">Slow 1</div>
+    <div class="panel">
+        <div style="font-size:100px; line-height:1.2em;">
+            1 1 1 1 1 1 1
+        </div>
+        {{partial "slow_explanation"}}
+    </div>
+</script>
+
+<script data-template-name="slow2" type="text/x-handlebars">
+    <div class="panel-header">Slow 2</div>
+    <div class="panel">
+        <div style="font-size:100px; line-height:1.2em;">
+            2 2 2 2 2 2 2
+        </div>
+        {{partial "slow_explanation"}}
+    </div>
+</script>
+
+<script data-template-name="slow3" type="text/x-handlebars">
+    <div class="panel-header">Slow 3</div>
+    <div class="panel">
+        <div style="font-size:100px; line-height:1.2em;">
+            3 3 3 3 3 3 3
+        </div>
+        {{partial "slow_explanation"}}
+    </div>
+</script>
+
+<script data-template-name="_slow_explanation" type="text/x-handlebars">
+    <p>These three "slow" menu items show how Ember Animated Outlet handles route transitions that occur while an animation is in progress.</p>
+    <p>When an animation is enqueued we first check to see if another animation is in progress. If not, we just start the animation as normally.</p>
+    <p>If an animation is already in progress we simply queue the next animation. The route transition still happened, i.e. the URL updates instantly.</p>
+    <p>If a second route transition occurs before the first animation has finished, we cancel the first route transition, and queue the second route transition instead.</p>
+    <p>The result is that the URL changes every time (and instantly) when the router transitions. But only the last queued animation's view will ever be visible.</p>
+    <p>Some positive side effects of this:</p>
+    <ul>
+        <li>You can build your routes just like normal. No extra work to support animation.</li>
+        <li>You don't need to handle events where the user interacts with the UI while it's animating in a special way.</li>
+        <li>There is no intermediate route/state between the old route and the new route.</li>
+        <li>The UI is never blocked.</li>
+        <li>The user will never have to wait for more than two animations to finish (the active one, and a single queued one).</li>
+    </ul>
 </script>
 
 </body>
