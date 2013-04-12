@@ -88,6 +88,19 @@ App.ContactInfoRoute = Ember.Route.extend({
         return this.modelFor('contact');
     }
 });
+
+App.Slow1Route = Ember.Route.extend({
+    animations: function( from) {
+        if (from == 'index') {
+            return {main: 'slowSlideLeft'}
+
+        } else {
+            return {main: 'fade'}
+        }
+    }
+});
+
+
 App.ContactInfoView = Ember.View.extend({
     classNames: ['panel-inner']
 });
@@ -99,6 +112,8 @@ App.ContactInvoicesRoute = Ember.Route.extend({
 App.ContactInvoicesView = Ember.View.extend({
     classNames: ['panel-inner']
 });
+
+
 
 
 App.Slow1View = Ember.View.extend();
