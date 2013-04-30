@@ -22,9 +22,6 @@ App.Router.map(function() {
 
 App.ApplicationRoute = Ember.Route.extend({
     events: {
-        goToIndex: function() {
-            this.transitionToAnimated('index', {main: 'fade'});
-        },
         goToInvoices: function() {
             this.transitionToAnimated('invoices', {main: 'fade'});
         },

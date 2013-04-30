@@ -22,7 +22,7 @@
     <div class="menu">
         <div class="title">Ember Animated Outlet</div>
         <ul>
-            <li><a {{action goToIndex}}>Introduction</a></li>
+            <li>{{#linkToAnimated index animations="main:fade"}}Introduction{{/linkToAnimated}}</li>
             <li><a {{action goToInvoices}}>Invoices</a></li>
             <li><a {{action goToContacts}}>Contacts</a></li>
         </ul>
