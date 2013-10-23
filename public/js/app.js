@@ -21,7 +21,7 @@ App.Router.map(function() {
 
 
 App.ApplicationRoute = Ember.Route.extend({
-    events: {
+    actions: {
         goToInvoices: function() {
             this.transitionToAnimated('invoices', {main: 'fade'});
         },
@@ -66,7 +66,7 @@ App.IndexView = Ember.View.extend();
 
 App.InvoicesIndexRoute = Ember.Route.extend({
     model: function() {
-        return App.Invoice.find();
+        return this.get('store').find('invoice');
     }
 });
 App.InvoicesIndexView = Ember.View.extend();
@@ -75,7 +75,7 @@ App.InvoicesShowView = Ember.View.extend();
 
 App.ContactsIndexRoute = Ember.Route.extend({
     model: function() {
-        return App.Contact.find();
+        return this.get('store').find('contact');
     }
 });
 App.ContactsIndexView = Ember.View.extend();
@@ -102,14 +102,10 @@ App.Slow1View = Ember.View.extend();
 App.Slow2View = Ember.View.extend();
 App.Slow3View = Ember.View.extend();
 
-
-App.Store = DS.Store.extend({
-    revision: 12,
-    adapter: 'DS.FixtureAdapter'
-})
+App.ApplicationAdapter = DS.FixtureAdapter;
 
 App.Invoice = DS.Model.extend({
-    contact: DS.belongsTo('App.Contact'),
+    contact: DS.belongsTo('contact'),
     no: DS.attr('number'),
     amount: DS.attr('amount')
 });
@@ -121,7 +117,7 @@ App.Contact = DS.Model.extend({
     city: DS.attr('string'),
     state: DS.attr('string'),
     country: DS.attr('string'),
-    invoices: DS.hasMany('App.Invoice')
+    invoices: DS.hasMany('invoice')
 });
 
 App.Invoice.FIXTURES = [

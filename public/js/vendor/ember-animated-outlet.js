@@ -86,11 +86,13 @@ Ember.AnimatedContainerView = Ember.ContainerView.extend({
                 this._isAnimating = true;
                 newView.on('didInsertElement', function() {
                     Ember.AnimatedContainerView._effects[effect](self, newView, oldView, function() {
-                        self.removeObject(oldView);
-                        oldView.destroy();
-                        //Check to see if there are any queued animations
-                        self._isAnimating = false;
-                        self._handleAnimationQueue();
+                        Em.run(function() {
+                            self.removeObject(oldView);
+                            oldView.destroy();
+                            //Check to see if there are any queued animations
+                            self._isAnimating = false;
+                            self._handleAnimationQueue();
+                        });
                     });
                 });
             } else {
@@ -170,6 +172,7 @@ Ember.AnimatedContainerView.reopenClass({
     }
 
 });
+
 /**
   Write me...
 
@@ -179,7 +182,7 @@ Ember.AnimatedContainerView.reopenClass({
   @for Ember.Handlebars.helpers
   @param {String} property the property on the controller that holds the view for this outlet
 */
-Handlebars.registerHelper('animatedOutlet', function(property, options) {
+Handlebars.registerHelper('animated-outlet', function(property, options) {
     var outletSource;
 
     if (property && property.data && property.data.isRenderData) {
@@ -199,6 +202,13 @@ Handlebars.registerHelper('animatedOutlet', function(property, options) {
     return Ember.Handlebars.helpers.view.call(this, Ember.AnimatedContainerView, options);
 });
 
+/**
+  See animated-outlet
+*/
+Handlebars.registerHelper('animatedOutlet', function(property, options) {
+    Ember.warn("The 'animatedOutlet' view helper is deprecated in favor of 'animated-outlet'");
+    return Ember.Handlebars.helpers['animated-outlet'].apply(this, arguments);
+});
 /**
 @module ember
 @submodule ember-routing
@@ -226,18 +236,11 @@ Ember.onLoad('Ember.Handlebars', function(Handlebars) {
   }
 
   function args(linkView, router, route) {
-    var passedRouteName = route || linkView.namedRoute, routeName;
-
-    routeName = fullRouteName(router, passedRouteName);
-    Ember.assert("The route " + passedRouteName + " was not found", router.hasRoute(routeName));
-
-    var ret = [ routeName ];
-
-    animations = linkView.parameters.animations;
-
-    return ret.concat(animations, resolvedPaths(linkView.parameters));
+    var ret = get(linkView,'routeArgs').slice(),
+        animations = linkView.parameters.animations;
+    ret.splice(1,0,animations);
+    return ret;
   }
-
 
   /**
     Renders a link to the supplied route using animation.
@@ -247,19 +250,26 @@ Ember.onLoad('Ember.Handlebars', function(Handlebars) {
     @extends Ember.LinkView
   **/
   var AnimatedLinkView = Ember.AnimatedLinkView = Ember.LinkView.extend({
-    click: function(event) {
+    _invoke: function(event) {
       if (!isSimpleClick(event)) { return true; }
 
       event.preventDefault();
       if (this.bubbles === false) { event.stopPropagation(); }
 
-      var router = this.get('router');
-      var route = this.get('container').lookup('route:' + this.get('namedRoute'));
+      if (get(this, '_isDisabled')) { return false; }
 
-      if (this.get('replace')) {
-        route.replaceWithAnimated.apply(router, args(this, router));
+      if (get(this, 'loading')) {
+        Ember.Logger.warn("This link-to is in an inactive loading state because at least one of its parameters presently has a null/undefined value, or the provided route name is invalid.");
+        return false;
+      }
+
+      var router = this.get('router'),
+          routeArgs = args(this, router);
+
+      if (get(this, ('replace'))) {
+        router.replaceWithAnimated.apply(router, routeArgs);
       } else {
-        route.transitionToAnimated.apply(router, args(this, router));
+        router.transitionToAnimated.apply(router, routeArgs);
       }
     }
   });
@@ -273,12 +283,12 @@ Ember.onLoad('Ember.Handlebars', function(Handlebars) {
     @param {Object} [context]*
     @return {String} HTML string
   */
-  Ember.Handlebars.registerHelper('linkToAnimated', function(name) {
-    var options = [].slice.call(arguments, -1)[0];
-    var params = [].slice.call(arguments, 1, -1);
-    var hash = options.hash;
+  Ember.Handlebars.registerHelper('link-to-animated', function(name) {
+    var options = [].slice.call(arguments, -1)[0],
+        params = [].slice.call(arguments, 0, -1),
+        hash = options.hash;
 
-    Ember.assert("linkToAnimated must contain animations", typeof(hash.animations) == 'string')
+    Ember.assert("link-to-animated must contain animations", typeof(hash.animations) == 'string')
     var re = /\s*([a-z]+)\s*:\s*([a-z]+)/gi;
     var animations = {};
     while (match = re.exec(hash.animations)) {
@@ -287,6 +297,7 @@ Ember.onLoad('Ember.Handlebars', function(Handlebars) {
     delete(hash.animations)
     hash.namedRoute = name;
     hash.currentWhen = hash.currentWhen || name;
+    hash.disabledBinding = hash.disabledWhen;
 
     hash.parameters = {
       context: this,
@@ -297,14 +308,29 @@ Ember.onLoad('Ember.Handlebars', function(Handlebars) {
 
     return Ember.Handlebars.helpers.view.call(this, AnimatedLinkView, options);
   });
+  
+  /**
+    See link-to-animated
+
+    @method linkTo
+    @for Ember.Handlebars.helpers
+    @deprecated
+    @param {String} routeName
+    @param {Object} [context]*
+    @return {String} HTML string
+  */
+  Ember.Handlebars.registerHelper('linkToAnimated', function() {
+    Ember.warn("The 'linkToAnimated' view helper is deprecated in favor of 'link-to-animated'");
+    return Ember.Handlebars.helpers['link-to-animated'].apply(this, arguments);
+  });
 
 });
 
 
-Ember.Route.reopen({
+Ember.Router.reopen({
 
     /**
-      Works as {@link Ember.Route.transitionTo}} except that it takes a third parameter, `animations`,
+      Works as {@link Ember.Router.transitionTo}} except that it takes a third parameter, `animations`,
       which will enqueue animations.
 
       `animations` should be an object with outlet names as keys and effect names as value.
@@ -320,7 +346,7 @@ Ember.Route.reopen({
     },
 
     /**
-      Works as {@link Ember.Route.replaceWith}} except that it takes a third parameter, `animations`,
+      Works as {@link Ember.Router.replaceWith}} except that it takes a third parameter, `animations`,
       which will enqueue animations.
 
       `animations` should be an object with outlet names as keys and effect names as value.
@@ -336,6 +362,22 @@ Ember.Route.reopen({
     }
 
 });
+
+
+Ember.Route.reopen({
+
+  transitionToAnimated: function(name, context) {
+      var router = this.router;
+      return router.transitionToAnimated.apply(router, arguments);
+  },
+
+  replaceWithAnimated: function() {
+      var router = this.router;
+      return router.replaceWithAnimated.apply(router, arguments);
+  }
+
+});
+
 Ember.ControllerMixin.reopen({
 
     /**
@@ -423,7 +465,9 @@ var slide = function(ct, newView, oldView, callback, direction, slow) {
             }
             ctEl.removeClass('ember-animated-container-slide-'+direction+'-ct-sliding');
             newEl.removeClass('ember-animated-container-slide-'+direction+'-new');
-            callback();
+            setTimeout(function() {
+                callback();
+            }, 0);
         }, duration);
     }, 0);
 };
