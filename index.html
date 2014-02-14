@@ -32,6 +32,13 @@
             <li><a {{action goToSlow2}}>Slow 2</a></li>
             <li><a {{action goToSlow3}}>Slow 3</a></li>
         </ul>
+        <div class="text">Other effects:</div>
+        <ul>
+            <li>{{#link-to-animated "index" animations="main:slideOverUp"}}Slide over up{{/link-to-animated}}</li>
+            <li>{{#link-to-animated "index" animations="main:slideOverRight"}}Slide over right{{/link-to-animated}}</li>
+            <li>{{#link-to-animated "index" animations="main:slideOverDown"}}Slide over down{{/link-to-animated}}</li>
+            <li>{{#link-to-animated "index" animations="main:slideOverLeft"}}Slide over left{{/link-to-animated}}</li>
+        </ul>
     </div>
     <div class="content">
         {{animated-outlet name="main"}}
