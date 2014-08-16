@@ -117,7 +117,7 @@ App.Contact = DS.Model.extend({
     city: DS.attr('string'),
     state: DS.attr('string'),
     country: DS.attr('string'),
-    invoices: DS.hasMany('invoice')
+    invoices: DS.hasMany('invoice', {async: true})
 });
 
 App.Invoice.FIXTURES = [
